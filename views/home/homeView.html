@@ -5,22 +5,22 @@
     <div>Ready: {{app.view.ready}}</div>
 
     <h2>Ethereum Network</h2>
-    <div>Web3 Connected: {{app.web3Connected}}</div>
-    <div ng-show="app.web3Connected">
+    <div>Web3 Connected: {{app.web3.connected}}</div>
+    <div ng-show="app.web3.connected">
 
-        <div>Network Id: {{web3.networks.current}}</div>
-        <div>Current Block: {{app.block.current.number}}</div>
+        <div>Network Id: {{app.web3.network}}</div>
+        <div>Current Block: {{app.web3.currentBlock.number}}</div>
         <div>ETH per USD: &diams;{{app.price.eth.usd | fromWei:'ether' | decimals:7}}</div>
         <div>USD per ETH: ${{app.price.usd.eth | fromWei:'ether' | decimals:2}}</div>
 
         <h2>Account Information</h2>
-        <div ng-show="!app.user.isLoggedIn">
+        <div ng-show="!app.web3.account.isLoggedIn">
             <div>Not logged in.</div>
         </div>
-        <div ng-show="app.user.isLoggedIn">
-            <div>Address: {{app.user.address}}</div>
-            <div>Ether: &diams;{{app.user.balance | fromWei:'ether' | decimals:5}}</div>
-            <div>USD Value: ${{(app.user.balance | fromWei:'ether') * (app.price.usd.eth | fromWei:'ether') | decimals:2}}</div>
+        <div ng-show="app.web3.account.isLoggedIn">
+            <div>Address: {{app.web3.account.address}}</div>
+            <div>Ether: &diams;{{app.web3.account.balance | fromWei:'ether' | decimals:5}}</div>
+            <div>USD Value: ${{(app.web3.account.balance | fromWei:'ether') * (app.price.usd.eth | fromWei:'ether') | decimals:2}}</div>
         </div>
 
     </div>

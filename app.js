@@ -14,8 +14,18 @@ function($scope, $q, $web3, $location, Profile, PriceFeed) {
 
     $scope.app = {
         ready: ready.promise,
-        web3Connected: null,
         path: parsePath(),
+        web3: {
+            network: $web3.networks.kovan,
+            connected: null,
+            currentBlock: null,
+            account: {
+                isLoggedIn: null,
+                address: null,
+                balance: null
+            }
+        },
+        
         price: {
             usd: {
                 eth: null
@@ -24,51 +34,50 @@ function($scope, $q, $web3, $location, Profile, PriceFeed) {
                 usd: null
             }
         },
-        user: {
-            isLoggedIn: null,
-            address: null,
-            balance: null
-        },
-        block: {
-            current: null
-        },
         error: null
     };
 
-    $web3.assertNetworkId($web3.networks.kovan)
-    .then(function(currentBlock){
-        $scope.app.web3Connected = true;
-        $scope.app.block.current = currentBlock;
-        return $q.all([
-            $web3.getCurrentAccount(),
-            PriceFeed.get('usd','eth'),
-            PriceFeed.get('eth','usd'),
-        ]);
-    }).then(function(promises){
-        var currentAddress = promises[0];
-        var usdPerEth = promises[1];
-        var ethPerUsd = promises[2];
+    $web3.getNetworkId().then(function(currentNetworkId){
+        $scope.app.web3.connected = true;
 
+        if($scope.app.web3.network != currentNetworkId){
+            var err = 'Connected to the wrong network!';
+            $scope.app.error = err;
+            ready.reject(err);
+            console.error(err);
+            console.log($scope.app);
+            return ready.promise;
+        } else {
+            return $q.all([
+                $web3.getBlock('latest'),
+                $web3.getCurrentAccount(),
+                PriceFeed.get('usd','eth'),
+                PriceFeed.get('eth','usd'),
+            ]);
+        }
+    }).then(function(promises){
+        var currentBlock = promises[0];
+        var currentAccount = promises[1];
+        var usdPerEth = promises[2];
+        var ethPerUsd = promises[3];
+
+        $scope.app.web3.currentBlock = currentBlock;
         $scope.app.price['usd']['eth'] = usdPerEth;
         $scope.app.price['eth']['usd'] = ethPerUsd;
 
-        return Profile.get(currentAddress);
+        return Profile.get(currentAccount);
     }).then(function(profile){
-        $scope.app.user = profile;
+        $scope.app.web3.account = profile;
         console.log($scope.app);
         ready.resolve();
     }).catch(function(err){
-        $scope.app.web3Connected = false;
-
-        console.error(err);
-        console.log($scope.app);
+        $scope.app.web3.connected = false;
         $scope.app.error = err;
         ready.reject(err);
+        console.error(err);
+        console.log($scope.app);
     });
-
-    function getNow(){
-        return parseInt((Date.now() / 1000).toFixed(0));
-    }
+        
     
     function parsePath(){
         var path = $location.path();
@@ -83,7 +92,7 @@ function($scope, $q, $web3, $location, Profile, PriceFeed) {
         //console.log(err, blockHash);
         console.log('New block found. Updating current block...');
         $web3.getBlock(blockHash).then(function(currentBlock){
-            $scope.app.block.current = currentBlock;
+            $scope.app.web3.currentBlock = currentBlock;
         });
     });
 
